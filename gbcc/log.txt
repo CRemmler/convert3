@@ -1,0 +1,65 @@
+commit 9b5826a1f517e1513d29a266dd049c7b5bf893b0
+Author: Carolyn Remmler <carolynremmler@C-L-MAC-4372.local>
+Date:   Sat Jun 10 23:40:48 2017 -0500
+
+    eval-cmd
+
+commit 5c4f6d6942b8f0ff7f6c3bae9ba4a1918c1b1320
+Author: Carolyn Remmler <carolynremmler@C-L-MAC-4279.local>
+Date:   Sun Jun 4 01:27:03 2017 -0500
+
+    click on canvas view submits coords
+
+commit 4d83311d2836dff359ba7f260ede64901f70694c
+Author: Carolyn Remmler <carolynremmler@C-L-MAC-4372.local>
+Date:   Sat Jun 3 17:56:29 2017 -0500
+
+    chooser, slider, monitor, switch, inputbox on client improved
+
+commit 0120ed821f6873938197ccf6c936a899d3e75952
+Author: Carolyn Remmler <carolynremmler@C-L-MAC-4279.local>
+Date:   Mon May 29 23:29:59 2017 -0500
+
+    add readme
+
+commit 9e48b1c34d10258715df7539b839f0b141343869
+Author: Carolyn Remmler <carolynremmler@C-L-MAC-4279.local>
+Date:   Mon May 29 23:27:28 2017 -0500
+
+    remove jquery
+
+commit aab33ee90c185309577c58a56d4d9ee629c54d85
+Author: Carolyn Remmler <carolynremmler@C-L-MAC-4279.local>
+Date:   Mon May 29 23:25:18 2017 -0500
+
+    known issues in readme
+
+commit ab267d745a4cf546abbb6f04163a7461adfc70fe
+Author: Carolyn Remmler <carolynremmler@C-L-MAC-4279.local>
+Date:   Mon May 29 23:18:41 2017 -0500
+
+    check support of gbcc and hubnet
+
+commit a23f3d2b8b768a097fd12a2b9d1b1e7de61d07dc
+Author: Carolyn Remmler <carolynremmler@C-L-MAC-4372.local>
+Date:   Mon May 29 00:43:08 2017 -0500
+
+    chooser, switcher, slider work
+
+commit 1ca75421f7424e5da33923276a35cbf22aec7bb4
+Author: Carolyn Remmler <carolynremmler@C-L-MAC-4372.local>
+Date:   Sun May 28 23:13:54 2017 -0500
+
+    generate netlogo web activities
+
+commit 293704c46c64177cb34e0a499838a6ddca1586a9
+Author: Carolyn Remmler <carolynremmler@C-L-MAC-4279.local>
+Date:   Sun May 28 00:39:11 2017 -0500
+
+    zip up and download
+
+commit 2c8b2b8459a6c94ed5315b2bf73e530192524204
+Author: Carolyn Remmler <carolynremmler@C-L-MAC-4279.local>
+Date:   Sat May 27 23:23:17 2017 -0500
+
+    first commit
