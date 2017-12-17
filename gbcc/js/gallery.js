@@ -8,11 +8,13 @@ Gallery = (function() {
   if ((is_chrome)&&(is_safari)) { is_safari = false; }
   if ((is_chrome)&&(is_opera)) { is_chrome = false; }
   
-  var allowTabs;                 //done
-  var allowMultipleLayers;       //done
-  var allowMultipleSelections;   //done
-  var allowCanvasForeverButtons; //done
-  var allowGalleryForeverButton; //done
+  is_safari = true; // use smaller temporary drawing canvas that is 200x200
+  
+  var allowTabs;                 
+  var allowMultipleLayers;       
+  var allowMultipleSelections;   
+  var allowCanvasForeverButtons; 
+  var allowGalleryControls; 
   var allowTeacherControls;
   var galleryForeverButton = "on";
   
@@ -26,32 +28,51 @@ Gallery = (function() {
     allowMultipleLayers = settings.allowMultipleLayers || false;
     allowMultipleSelections = settings.allowMultipleSelections || false;
     allowCanvasForeverButtons = settings.allowCanvasForeverButtons || false;
-    allowGalleryForeverButton = settings.allowGalleryForeverButton || false;
+    allowGalleryControls = settings.allowGalleryControls || false;
     allowTeacherControls = settings.allowTeacherControls || false;
     if (allowTabs) { // student, hubnet
       $(".netlogo-tab-area").removeClass("hidden");
     } else {
       $(".netlogo-gallery-tab").css("display","none");
     }
-    if (allowGalleryForeverButton) {
-      $(".netlogo-gallery-tab").append("<span class='gallery-forever-icon'><i class='fa fa-refresh' aria-hidden='true'></i></span>")
+    if (allowGalleryControls) {
+      var galleryControlSpan = "<div class='gallery-controls'>";
+      galleryControlSpan += "<span class='gallery-right'>Size: <select id='canvasSize'><option>Small</option><option>Medium</option><option>Large</option></select>";
+      galleryControlSpan += "<input type='checkbox' checked id='galleryUpdates'> Listen</span>";
+      galleryControlSpan += "<span class='gallery-left'><input type='checkbox' id='selectAll'> Select All <input type='checkbox' id='foreverSelectAll'> Forever</span>";
+      galleryControlSpan += "</div>";
+      $(".netlogo-gallery-tab-content").append(galleryControlSpan);
       socket.emit("request gallery data", {userId: myUserId, status: "select"}); 
-      $(".gallery-forever-icon").on("click",function() {
-        if ($(".netlogo-gallery-tab").hasClass("selected")) {
-          $(".netlogo-gallery-tab").removeClass("selected");
+      
+      $("#canvasSize").on("change", function() {
+        if ($(".gbcc-gallery").hasClass("small")) { $(".gbcc-gallery").removeClass("small"); }
+        if ($(".gbcc-gallery").hasClass("medium")) { $(".gbcc-gallery").removeClass("medium") }
+        if ($(".gbcc-gallery").hasClass("large")) { $(".gbcc-gallery").removeClass("large") }
+        $(".gbcc-gallery").addClass($(this).val().toLowerCase());
+      });
+      $("#galleryUpdates").on("click",function() {
+        if ($(this).is(":checked")) {
+          //$(".netlogo-gallery-tab").removeClass("selected");
           $(".netlogo-gallery-tab-content").removeClass("selected");
           $(".gbcc-gallery li").removeClass("gray-border");
           galleryForeverButton = "on";
           socket.emit("request user broadcast data");
         } else {
-          $(".netlogo-gallery-tab").addClass("selected");
+          //$(".netlogo-gallery-tab").addClass("selected");
           $(".netlogo-gallery-tab-content").addClass("selected");
           $(".gbcc-gallery li").addClass("gray-border");
           galleryForeverButton = "off"; 
         }
       });
+      $("#selectAll").on("click", function() {
+        selectAll();
+      });
+      $("#foreverSelectAll").on("click", function() {
+        foreverSelectAll();
+      });
     }
-    if (!allowTeacherControls) { $(".teacherControls").css("display","none"); }
+    if (!allowGalleryControls) { $(".gallery-controls").css("display","none"); }
+    if (!allowTeacherControls) { $(".teacher-controls").css("display","none"); }
     if (is_safari) {
       $("body").append("<canvas id=\"miniSafariCanvasView\" width=\"200\" height=\"200\" style=\"display:none\"></canvas>");
       canvasLength = 200; canvasWidth = 200;
@@ -61,6 +82,62 @@ Gallery = (function() {
       canvasLength = 500; canvasWidth = 500;
       imageQuality = 0.75;
     }
+  }
+  
+  function selectAll() {
+    var $elt;
+    var myId;
+    if ( $("#foreverSelectAll").is(":checked") && ! $("#selectAll").is(":checked") ) {
+     $("#foreverSelectAll").click();
+    }
+    var isChecked = $("#selectAll").is(":checked");
+    /*
+    $(".card.card-image").each(function() {
+      if (isChecked != ($(this).parent().hasClass("selected"))) {
+        $(this).click(); 
+      }
+    });*/
+    $("li").each(function() {
+      myId = $(this).attr("id")
+      $elt = $("#"+myId+" .card.card-image");
+      if (isChecked != $elt.parent().hasClass("selected")) {
+        $elt.click(); 
+        $("#"+myId+" .forever-icon:not(.selected)").css("display","none");     
+      }
+    });
+  }
+  
+  function foreverSelectAll() {
+    //if ( $("#foreverSelectAll").is(":checked") && ! $("#selectAll").is(":checked") ) {
+    // $("#selectAll").click();
+    //}
+    var isChecked = $("#foreverSelectAll").is(":checked");
+    $(".forever-icon").each(function() {
+      /*
+      if (!isChecked) {
+        if (isChecked != ($(this).hasClass("selected"))) {
+          $(this).click(); 
+          (isChecked) ? $(this).css("display","block") : $(this).css("display","none");
+        }
+      }
+      if (isChecked) {
+        if (isChecked == $(this).parent().hasClass("selected")) {
+          $(this).click(); 
+          (isChecked) ? $(this).css("display","block") : $(this).css("display","none");
+        }
+      }*/
+      if (isChecked) {
+        if ($(this).parent().hasClass("selected")) {
+          $(this).click(); 
+          $(this).css("display","block");
+        }
+      } else  {
+        if (($(this).hasClass("selected"))) {
+          $(this).click(); 
+          $(this).css("display","none");
+        }
+      }
+    });
   }
   
   assignZIndex();
@@ -102,36 +179,44 @@ Gallery = (function() {
   }
   
   function cardClickHandler(thisElt) {
-    var userId = $(thisElt).parent().attr("id").replace("gallery-item-","");
+    //console.log("add click handler",thisElt);
+    var userId = $(thisElt).parent().attr("userid");
+    var userType = $(thisElt).parent().attr("usertype");
+    //console.log(userType);
     if (procedures.gbccOnGo != undefined) {
       if ($(thisElt).parent().hasClass("selected")) {
         $("#gallery-item-"+userId+" .forever-icon").css("display","none").removeClass("selected");
-        socket.emit("request user action", {userId: userId, status: "forever-deselect"});  
+        socket.emit("request user action", {userId: userId, status: "forever-deselect", userType: userType});  
       } else {
         $("#gallery-item-"+userId+" .forever-icon").css("display","block");
       }
     }
     if ($(thisElt).parent().hasClass("selected")) {
       $(thisElt).parent().removeClass("selected");
-      socket.emit("request user action", {userId: userId, status: "deselect"}); 
+      socket.emit("request user action", {userId: userId, status: "deselect", userType: userType}); 
     } else { 
       if (allowMultipleSelections) {
         $(thisElt).parent().addClass("selected"); 
-        socket.emit("request user action", {userId: userId, status: "select"});
+        socket.emit("request user action", {userId: userId, status: "select", userType: userType});
+        if ($(this).children(".forever-icon").hasClass("selected")) {
+          $(this).children(".forever-icon").removeClass("selected").css("display","none");
+          socket.emit("request user action", {userId: thisUserId, status: "forever-deselect", userType: userType});  
+        }
       } else {
         $(".selected").each(function() {
           if ($(this).attr("id") && $(this).attr("id").includes("gallery-item-")) {
-            thisUserId = $(this).attr("id").replace("gallery-item-","");
-            socket.emit("request user action", {userId: thisUserId, status: "deselect"}); 
+            //thisUserId = $(this).attr("id").replace("gallery-item-","");
+            thisUserId = $(this).attr("userid");
+            socket.emit("request user action", {userId: thisUserId, status: "deselect", userType: userType}); 
             $(this).removeClass("selected");
             if ($(this).children(".forever-icon").hasClass("selected")) {
               $(this).children(".forever-icon").removeClass("selected").css("display","none");
-              socket.emit("request user action", {userId: thisUserId, status: "forever-deselect"});  
+              socket.emit("request user action", {userId: thisUserId, status: "forever-deselect", userType: userType});  
             }
           }
         });
         $(thisElt).parent().addClass("selected");
-        socket.emit("request user action", {userId: userId, status: "select"}); 
+        socket.emit("request user action", {userId: userId, status: "select", userType: userType}); 
       }
     }
   }
@@ -145,15 +230,23 @@ Gallery = (function() {
     rotateCards(direction, cards);    
   }
   
-  function foreverClickHandler(thisSpan, userId) {
+  function foreverClickHandler(thisSpan, userId, userType) {
     if ($(thisSpan).hasClass("selected")) {  
       $(thisSpan).removeClass("selected");
-      socket.emit("request user action", {userId: userId, status: "forever-deselect"});  
+      socket.emit("request user action", {userId: userId, status: "forever-deselect", userType: userType});  
     } else {
       $(thisSpan).addClass("selected");
       $(thisSpan).parent().addClass("selected"); 
-      session.compileObserverCode("gbcc-forever-button-code-"+userId, "gbcc-on-go \""+userId+"\"");
-      socket.emit("request user action", {userId: userId, status: "forever-select"})  
+      if (procedures.gbccOnTeacherGo != undefined && userType === "teacher") {
+        //console.log("compile teacher code");
+        session.compileObserverCode("gbcc-forever-button-code-"+userId, "gbcc-on-teacher-go \""+userId+"\"");
+      } else {
+        if (procedures.gbccOnGo != undefined) {
+          //console.log("compile student code");
+          session.compileObserverCode("gbcc-forever-button-code-"+userId, "gbcc-on-go \""+userId+"\"");
+        }
+      }
+      socket.emit("request user action", {userId: userId, status: "forever-select", userType: userType})  
     }      
   }
 
@@ -182,14 +275,17 @@ Gallery = (function() {
   }
   
   function createCanvas(data) {
+    //console.log(data.userType);
     var canvasImg = new Image();
     canvasImg.id = data.id;
     canvasImg.userId = data.userId;
     var label = $(".gbcc-gallery li").length;
     if ($(".gbcc-gallery").length === 0) { 
       $(".netlogo-gallery-tab-content").append("<div class='gbcc-gallery'><ul></ul></div>"); 
+      $(".canvasSize").val("Small");
+      $(".gbcc-gallery").addClass("small");
     }
-    var newLiHtml = "<li id='gallery-item-"+data.userId+"'>";
+    var newLiHtml = "<li id='gallery-item-"+data.userId+"' usertype='"+data.userType+"' userid='"+data.userId+"'>";
     newLiHtml += "<span class=\"arrow arrow-left z20\"><i class='fa fa-chevron-left' aria-hidden='true'></i></span>";
     newLiHtml += "<span class=\"arrow arrow-right z20\"><i class='fa fa-chevron-right' aria-hidden='true'></i></span>";
     if (allowCanvasForeverButtons) {
@@ -202,7 +298,7 @@ Gallery = (function() {
     $(".gbcc-gallery ul").append(newLiHtml);
     $("#gallery-item-"+label+" .card-image").append(canvasImg);
     $("#gallery-item-"+data.userId+" .arrow").click(function() { arrowClickHandler(this) });
-    $("#gallery-item-"+data.userId+" .forever-icon").click(function() { foreverClickHandler(this, data.userId) });
+    $("#gallery-item-"+data.userId+" .forever-icon").click(function() { foreverClickHandler(this, data.userId, data.userType) });
     $("#gallery-item-"+data.userId).mouseover(function() { itemMouseoverHandler(this); });
     $("#gallery-item-"+data.userId).mouseout(function() { itemMouseoutHandler(this); });
   }
@@ -242,7 +338,8 @@ Gallery = (function() {
     var canvasData = { 
             id : data.tag + "-" + data.source,
             src : data.message,
-            userId : data.source
+            userId : data.source,
+            userType: data.userType
           }
     if ($("#gallery-item-"+data.source).length === 0 ) { createCanvas(canvasData); } 
     if (data.message.substring(0,13) === "gallery-clear") {
@@ -271,7 +368,7 @@ Gallery = (function() {
 
   function broadcastToGallery(key, value) {
     if (key === "view") {
-      drawView();
+      drawView(value);
     } else if (key === "plot") {
       drawPlot(value);
     } else if (key === "text") {
@@ -314,7 +411,7 @@ Gallery = (function() {
     return dataObj;
   }
   
-  function drawView() {
+  function drawView(key) {
     var miniCanvasId = is_safari ? "miniSafariCanvasView" : "miniCanvasView";
     var dataObj = scaleCanvas($(".netlogo-canvas").width(), $(".netlogo-canvas").height());
     var width = dataObj.width;
@@ -329,7 +426,7 @@ Gallery = (function() {
     message = document.getElementById(miniCanvasId).toDataURL("image/jpeg", imageQuality); 
     socket.emit("send reporter", {
       hubnetMessageSource: "all-users", 
-      hubnetMessageTag: "canvas-view", 
+      hubnetMessageTag: "canvas-view-"+key, 
       hubnetMessage: message
     }); 
   }

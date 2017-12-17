@@ -3,10 +3,11 @@ var universe;
 var commandQueue = [];
 var userData = {};
 var myData = {};
-var activityType;
-var repaintPatches = true;
+//var repaintPatches = true;
 var foreverButtonCode = new Object();
-var myUserId;
+var myUserType;
+var activityType = undefined;
+
   
 jQuery(document).ready(function() {
   var userId;
@@ -14,7 +15,7 @@ jQuery(document).ready(function() {
   var turtleDict = {};
   var allowMultipleButtonsSelected = true;
   var allowGalleryForeverButton = true;
-  
+
   socket = io();
 
   // save student settings
@@ -30,16 +31,22 @@ jQuery(document).ready(function() {
 
   // display teacher or student interface
   socket.on("display interface", function(data) {
+    if (activityType === undefined) { activityType = data.activityType; }
     switch (data.userType) {
       case "teacher": //as teacher, show teacher interface
         Interface.showTeacher(data.room, data.components);
         break;
-      case "hubnet student": //as hubnet student, show hubnet student interface
-        Interface.showStudent(data.room, data.components, data.gallery);
+      case "hierarchy hubnet student": //as hierarchy student, show hubnet student interface
+        Interface.showStudent(data.room, data.components, "hubnet");
+        $(".teacher-controls").css("display","none");
         break;
-      case "gbcc student": //as gbcc student, show teacher interface, but hide teacher controls
+      case "hierarchy gbcc student": //as hierarchy student, show hubnet student interface
+        Interface.showStudent(data.room, data.components, "gbcc");
+        $(".teacher-controls").css("display","none");
+        break;
+      case "flat student": //as flat student, show teacher interface, but hide teacher controls
         Interface.showTeacher(data.room, data.components);
-        $(".teacherControls").css("display","none");
+        $(".teacher-controls").css("display","none");
         break;
       case "login":
         activityType = data.activityType;
@@ -52,8 +59,12 @@ jQuery(document).ready(function() {
   });
 
   socket.on("gbcc user enters", function(data) {
-    if (procedures.gbccOnEnter != undefined) {
-      session.run('gbcc-on-enter "'+data.userId+'"');
+    console.log("enters "+data.userType);
+    if (data.userType === "teacher" && procedures.gbccOnTeacherEnter != undefined) 
+    {
+      session.run('gbcc-on-teacher-enter "'+data.userId+'"');
+    } else {
+      if (procedures.gbccOnEnter != undefined) { session.run('gbcc-on-enter "'+data.userId+'"'); }
     }
     if (data.userData) {
       userData[data.userId] = data.userData;
@@ -61,8 +72,12 @@ jQuery(document).ready(function() {
   });
   
   socket.on("gbcc user exits", function(data) {
-    if (procedures.gbccOnExit != undefined) {
-      session.run('gbcc-on-exit ["'+data.userId+'"]');
+    if (data.userType === "teacher" && procedures.gbccOnTeacherExit != undefined) {
+        session.run('gbcc-on-teacher-exit ["'+data.userId+'"]');
+    } else {
+      if (procedures.gbccOnExit != undefined) {
+        session.run('gbcc-on-exit ["'+data.userId+'"]');
+      }
     }
   });
 
@@ -73,16 +88,21 @@ jQuery(document).ready(function() {
 
   // student repaints most recent changes to world (hubnet, not gbcc)
   socket.on("send update", function(data) {
-    universe.applyUpdate({turtles: data.turtles, patches: data.patches});
-    universe.repaint();
+    if (mirroringEnabled) {
+      universe.applyUpdate({turtles: data.turtles, patches: data.patches});
+      universe.repaint();
+    }
   });
 
   // show or hide student view or gallery
   socket.on("student accepts UI change", function(data) {
     if (data.type === "view") {
       (data.display) ? $(".netlogo-view-container").css("display","block") : $(".netlogo-view-container").css("display","none");
-    } else {
+    } else if (data.type === "tabs") {
       (data.display) ? $(".netlogo-tab-area").css("display","block") : $(".netlogo-tab-area").css("display","none");
+    } else if (data.type === "widgets") {
+      (data.display) ? $(".netlogo-widget-container .netlogo-button:not(.login)").css("display","block") : 
+        $(".netlogo-widget-container .netlogo-button").css("display","none");  
     }
   });
 
@@ -90,7 +110,7 @@ jQuery(document).ready(function() {
   socket.on("display reporter", function(data) {
     if (!allowGalleryForeverButton || (allowGalleryForeverButton && !$(".netlogo-gallery-tab").hasClass("selected"))) {
       if (data.hubnetMessageTag.includes("canvas")) {
-        Gallery.displayCanvas({message:data.hubnetMessage,source:data.hubnetMessageSource,tag:data.hubnetMessageTag});
+        Gallery.displayCanvas({message:data.hubnetMessage,source:data.hubnetMessageSource,tag:data.hubnetMessageTag,userType:data.userType});
       } else {
         var matchingMonitors = session.widgetController.widgets().filter(function(x) { 
           return x.type === "monitor" && x.display === data.hubnetMessageTag; 
@@ -122,23 +142,31 @@ jQuery(document).ready(function() {
   });
   
   socket.on("accept user action", function(data) {
-    if (data.status === "select") {
-      if (procedures.gbccOnSelect != undefined) {
-        session.run('gbcc-on-select "'+data.userId+'"');        
-      }
-    } else if (data.status === "deselect") {
-      if (procedures.gbccOnDeselect != undefined) {
-        session.run('gbcc-on-deselect "'+data.userId+'"');        
-      }
-    } else if (data.status === "forever-deselect") {
-      delete foreverButtonCode[data.userId];
-      if ($.isEmptyObject(foreverButtonCode)) { clearInterval(myVar); }
-    } else if (data.status === "forever-select") {
-      if ($.isEmptyObject(foreverButtonCode)) { 
-        myVar = setInterval(runForeverButtonCode, 1000); 
-      }
-      foreverButtonCode[data.userId] = data.key;
-    } 
+    var userType = data.userType;
+    switch (data.status) {
+      case "select":
+        if (userType === "teacher" && procedures.gbccOnTeacherSelect != undefined) {
+          session.run('gbcc-on-teacher-select "'+data.userId+'"');    
+        } else {
+          if (procedures.gbccOnSelect != undefined) { session.run('gbcc-on-select "'+data.userId+'"');}
+        }
+        break;
+      case "deselect":
+        if (userType === "teacher" && procedures.gbccOnTeacherDeselect != undefined) {
+          session.run('gbcc-on-teacher-deselect "'+data.userId+'"');    
+        } else {
+          if (procedures.gbccOnDeselect != undefined) { session.run('gbcc-on-deselect "'+data.userId+'"');}
+        }
+        break;
+      case "forever-deselect":
+        delete foreverButtonCode[data.userId];
+        if ($.isEmptyObject(foreverButtonCode)) { clearInterval(myVar); }
+        break;
+      case "forever-select":
+        if ($.isEmptyObject(foreverButtonCode)) { myVar = setInterval(runForeverButtonCode, 200); }
+        foreverButtonCode[data.userId] = data.key;
+        break;
+    }
   });
 
   var myVar = "";

@@ -1,3 +1,4 @@
+
 Interface = (function() {
 
   var items = {};
@@ -19,24 +20,24 @@ Interface = (function() {
     $(".netlogo-model-title").removeClass("hidden");
     // show Welcome Students reporter
     var index = components.componentRange[0];
-    var widget = "<div id='netlogo-monitor-"+index+"' class='netlogo-widget netlogo-monitor netlogo-output login-welcome-student'>"+
+    var widget = "<div id='netlogo-monitor-"+index+"' class='netlogo-widget netlogo-monitor netlogo-output login login-welcome-student'>"+
     "<label class='netlogo-label'>Welcome Student</label> "+
     "<output class='netlogo-value'>Please choose a room.</output></div>";
     $("body").append(widget);
     // show Welcome teacher reporter
     index++;
-    widget = "<div id='netlogo-monitor-"+index+"' class='netlogo-widget netlogo-monitor netlogo-output login-welcome-teacher'>"+
+    widget = "<div id='netlogo-monitor-"+index+"' class='netlogo-widget netlogo-monitor netlogo-output login login-welcome-teacher'>"+
     "<label class='netlogo-label ''>Welcome Teacher</label> <output class='netlogo-value'>"+
     "Please create a room.    <span id='tipHeading'><u>(tips) </u></span></output></div>";
     $("body").append(widget);
     // show room name input box
     index++;
-    widget = "<label id='netlogo-inputBox-"+index+"' class='netlogo-widget netlogo-input-box netlogo-input login-room-name'>"+
+    widget = "<label id='netlogo-inputBox-"+index+"' class='netlogo-widget netlogo-input-box netlogo-input login login-room-name'>"+
     "<div class='netlogo-label'>room-name</div>  <textarea class='netlogo-multiline-input create-room-input'></textarea></label>";
     $("body").append(widget);
     // show Create Room button
     index++;
-    widget = "<button id='netlogo-button-"+index+"'class='netlogo-widget netlogo-button netlogo-command login-create-room' type='button' >"+
+    widget = "<button id='netlogo-button-"+index+"'class='netlogo-widget netlogo-button netlogo-command login login-create-room' type='button' >"+
     "<div class='netlogo-button-agent-context'></div> <span class='netlogo-label'>Create</span> </button>";
     $("body").append(widget);
     $("#netlogo-button-"+index).on("click", function() {
@@ -45,7 +46,7 @@ Interface = (function() {
       socket.emit("enter room", {room: myRoom});
     });
     // container for room Buttons
-    widget = "<div class='netlogo-widget login-room-button-container'></div>"
+    widget = "<div class='netlogo-widget login login-room-button-container'></div>"
     $("body").append(widget);
     var roomName;
     var passCode;
@@ -61,7 +62,7 @@ Interface = (function() {
       }
       roomNames["netlogo-button-"+index] = rooms[i];
       passCodes["netlogo-button-"+index] = passCode;
-      widget = "<button id='netlogo-button-"+index+"'class='netlogo-widget netlogo-command login-room-button'"+
+      widget = "<button id='netlogo-button-"+index+"'class='netlogo-widget netlogo-command login login-room-button'"+
       " type='button'>"+
       "<div class='netlogo-button-agent-context'></div> <span class='netlogo-label'>"+markdown.toHTML(roomName)+"</span> </button>";
       $(".login-room-button-container").append(widget);
@@ -79,7 +80,7 @@ Interface = (function() {
         }
       });
     }
-    widget  = "<div class='netlogo-widget login-tips'>";
+    widget  = "<div class='netlogo-widget login login-tips'>";
     widget += "  <span id='tips' style='display:none'>";
     widget += "    <p><span>- Getting crowded? Start your own group of rooms. Add something like \"/octopus\" to the end of this url.</span>";
     widget += "    <p><span>- Want to require an entry code? Call your room something like \"123:starfish\".";
@@ -103,19 +104,23 @@ Interface = (function() {
     $(".admin-body").css("display","none");
   }
 
-  function displayStudentInterface(room, components, gallery) {
+  function displayStudentInterface(room, components, activityType) {
     showItems(components.componentRange[0], components.componentRange[1]);
     var sanitizedRoom = markdown.toHTML(room);
     $("#netlogo-title").html("<p>"+$("#netlogo-title").html()+" "+sanitizedRoom.substr(3,sanitizedRoom.length));
-    if (gallery.allowHubnetClientView) { $(".netlogo-view-container").removeClass("hidden"); }
+    $(".netlogo-view-container").removeClass("hidden");
     $(".admin-body").css("display","none");
-    $(".teacherControls").css("display","none");
-    $(".netlogo-button:not(.hidden)").click(function(e){clickHandler(this, e, "button");});
-    $(".netlogo-slider:not(.hidden)").click(function(e){clickHandler(this, e, "slider");});
-    $(".netlogo-switcher:not(.hidden)").click(function(e){clickHandler(this, e, "switcher");});
-    $(".netlogo-chooser:not(.hidden)").click(function(e){clickHandler(this, e, "chooser");});
-    $(".netlogo-input-box:not(.hidden)").click(function(e){clickHandler(this, e, "inputBox");});
-    $(".netlogo-view-container:not(.hidden)").click(function(e){clickHandler(this, e, "view");});
+    $(".teacher-controls").css("display","none");
+    if (activityType === "hubnet") {
+      $(".netlogo-button:not(.hidden)").click(function(e){clickHandler(this, e, "button");});
+      $(".netlogo-slider:not(.hidden)").click(function(e){clickHandler(this, e, "slider");});
+      $(".netlogo-switcher:not(.hidden)").click(function(e){clickHandler(this, e, "switcher");});
+      $(".netlogo-chooser:not(.hidden)").click(function(e){clickHandler(this, e, "chooser");});
+      $(".netlogo-input-box:not(.hidden)").click(function(e){clickHandler(this, e, "inputBox");});
+      $(".netlogo-view-container:not(.hidden)").click(function(e){clickHandler(this, e, "view");});
+    } else {
+      $(".netlogo-tab-area").removeClass("hidden");
+    }
   }
 
   function displayDisconnectedInterface() {
@@ -200,7 +205,11 @@ Interface = (function() {
   
   function addTeacherControls() {
     // add show/hide client view or tabs
-    $(".netlogo-view-container").append("<span class='teacherControls' style='float:right'><input id='enableView' checked type='checkbox'>Enable View <input id='enableTabs' checked type='checkbox'> Enable Tabs</span>");
+    if (activityType === "hubnet") {
+      $(".netlogo-view-container").append("<span class='teacher-controls' style='float:right'><input id='enableMirroring' checked type='checkbox'>Enable Mirroring</span>");
+    } else {
+      $(".netlogo-view-container").append("<span class='teacher-controls' style='float:right'>Enable: <input id='enableView' checked type='checkbox'>View <input id='enableTabs' checked type='checkbox'>Tabs <input id='enableWidgets' checked type='checkbox'>Widgets</span>");
+    }
     $(".netlogo-view-container").css("width", $(".netlogo-view-container canvas").css("width"));
     $("#enableView").click(function() {
       socket.emit('teacher requests UI change', {'display': $(this).prop("checked"), 'type': 'view'});
@@ -208,9 +217,17 @@ Interface = (function() {
     $("#enableTabs").click(function() {
       socket.emit('teacher requests UI change', {'display': $(this).prop("checked"), 'type': 'tabs'});
     });
+    $("#enableWidgets").click(function() {
+      socket.emit('teacher requests UI change', {'display': $(this).prop("checked"), 'type': 'widgets'});
+    });
+    $("#enableMirroring").click(function() {
+      mirroringEnabled = $(this).prop("checked") ? true : false;
+      socket.emit('teacher requests UI change', {'display': mirroringEnabled, 'type': 'view'});
+    });
   }
 
   function showItems(min, max) {
+    console.log(min+" "+max);
     $(".netlogo-widget").addClass("hidden");
     $(".netlogo-model-title").removeClass("hidden");
     for (var i=min; i<=max; i++) {
