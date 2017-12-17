@@ -49,9 +49,9 @@
                 <tr>
                   <td>
                     <b>Type of Model</b>
-                    <br><input type="radio" choice='9' id='gbccFlat' class='modelType' name='modelType'> GbCC Flat
-                    <br><input type="radio" choice='8' id='gbccHierarchical' class='modelType' name='modelType'> GbCC Hierarchical
-                    <br><input type="radio" choice='7' id='legacyHubnet' class='modelType' name='modelType'>
+                    <br><input type="radio" choice='9' id='gbccFlat' value='gbccFlat' class='modelType' name='modelType'> GbCC Flat
+                    <br><input type="radio" choice='8' id='gbccHierarchical' value='gbccHierarchical' class='modelType' name='modelType'> GbCC Hierarchical
+                    <br><input type="radio" choice='7' id='legacyHubnet' value='legacyHubnet' class='modelType' name='modelType'>
                       <a href="https://ccl.northwestern.edu/netlogo/hubnet.html">Legacy HubNet</a>
                   </td>
                   <td>
@@ -69,18 +69,13 @@
               <br><input type='checkbox' name='allowMultipleLayers' choice='2' class='choice'> Allow canvases to have multiple layers.
               <br><input type='checkbox' name='allowMultipleSelections' choice='3' class='choice'> Allow users to select multiple canvases. 
               <br><input type='checkbox' name='allowCanvasForeverButtons' choice='4' class='choice'> Allow canvases to act as forever buttons.
-              <br><input type='checkbox' name='allowGalleryForeverButton' choice='5' class='choice'> Allow users the option to listen or ignore.
-              <!--<input type='checkbox' name='allowTabs' choice='1' class='choice'> Allow students to have Tabs. <span id='tabWarning' class='notice'>(HubNet models, only.)</span>
-              <br><input type='checkbox' name='allowHubnetClientView' choice='6' class='choice'> Allow students to have a View. <span id='viewWarning' class='notice'>(HubNet models, only.)</span>
-                            <br>--- or ---
-              <br><input type='checkbox' name='legacyHubnet' choice='7' class='choice'> Legacy HubNet Model with <a href="https://ccl.northwestern.edu/netlogo/hubnet.html">HubNet syntax</a> and optional mirroring.
-            -->
+              <br><input type='checkbox' name='allowGalleryControls' choice='5' class='choice'> Allow users additional control over gallery.
               <p>
               <div class="demo-container-wrapper">
                 <div class='demo-container' id='container0'>
                   <img class="basicModel" src="images3/basicModel.png">
-                  <!--<img class="basicModelEmpty" src="images/basicModelEmpty.png">-->
                   <img class='demo demo1' src="images3/demo1.png">
+                  <img class='demo demo5 demo5a' src="images3/demo1-green.png">
                   <img class='demo demo2' src="images3/demo2.png">  
                   <img class='demo demo3a' src="images3/demo3a.png">  
                   <img class='demo demo3' src="images3/demo3.png">      
@@ -94,7 +89,6 @@
                   <img class='demo demo0' id="demo0a" src="images3/gray.png">         
                   <img class='demo demo0' id = "demo0b" src="images3/viewControls.png">
                   <img class='demo basicTabs galleryTab notes' src="images3/blue.png"> 
-                  <!-- <img class='demo demo7 notes' src="images/legacyHubnet.png"> -->
                 </div>
               </div>
             </div>
@@ -122,7 +116,7 @@
               NetLogo File (Student UI): <input type="file" accept=".nlogo" class="selectFileButton" name="studentfiletoupload">
             </span>
             <span class="legacyHubnetFile selectFileSpan">
-              HubNet File: <input type="file" accept=".nlogo" class="selectFileButton" name="studentfiletoupload">
+              HubNet File: <input type="file" accept=".nlogo" class="selectFileButton" name="hubnetfiletoupload">
             </span>
             <div id="uploadFileContainer" class="initHidden smallText">
               <b>Filename: </b>
@@ -136,7 +130,7 @@
           <td><img class="createIcon initHidden" id="downloadEnabled" src="./images3/icon-download2.png">
             <img class="createIcon" id="downloadDisabled" src="./images3/icon-download2-bw.png">
           </td>
-          <td><b>Step 4:</b> Download the .zip file.</b> <span class="notice">Coming Soon</span>
+          <td><b>Step 4:</b> Download the .zip file.</b> 
             <span id="correctFilename" class="initHidden"><button id="uploadFileButton" type="submit">Upload</button></span>
           </td>
         </tr>
@@ -208,7 +202,11 @@
     </form>
     <div id='troubleshoot' class='initHidden'>
     <h2>Troubleshoot</h2>
-      If there is an error like <span class='code'>There is already a global variable called STEP-SIZE</span>, then comment out that global variable.
+      If there is an error like <span class='code'>There is already a global variable called STEP-SIZE</span>, 
+      this means that a
+      hubnet client variable is also identified as a global variable. Fix this problem by 
+      renaming the hubnet client variable to something like 'stepsz'. If listening
+      for "hubnet-message-tag = 'step-size'", then assign 'stepsz = hubnet-message';
     </div>
     <p>
       <h2>Other</h2>

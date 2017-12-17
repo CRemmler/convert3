@@ -152,8 +152,42 @@
     //});
     $(".demo1").css("display","block");
     //$(".initHidden").css("display","none");
-    
-    
+    var readyForUpload;
+    $(".selectFileButton").on("change", function() {
+      updateReadyForUpload();
+    });
+    $(".modelType").on("change", function() {
+      updateReadyForUpload();
+    });
+    function updateReadyForUpload() {
+      console.log("select file button was changed");
+      readyForUpload = false;
+      console.log($("input[name='modelType']:checked").val());
+      switch ($("input[name='modelType']:checked").val()) {
+        case "legacyHubnet":
+          if ($("[name=hubnetfiletoupload]").val() != "") { readyForUpload = true; }
+          break;
+        case "gbccFlat":
+          if ($("[name=userfiletoupload]").val() != "") { readyForUpload = true; }
+          break;
+        case "gbccHierarchical":
+          if (($("[name=studentfiletoupload]").val() != "") && ($("[name=teacherfiletoupload]").val() != ""))
+          { readyForUpload = true; }
+          break;
+        default:
+          break;
+      }
+      if (readyForUpload) {
+        $("#downloadEnabled").css("display","inline-block");
+        $("#downloadDisabled").css("display","none");
+        $("#correctFilename").css("display","inline-block");
+      } else {
+        $("#downloadEnabled").css("display","none");
+        $("#downloadDisabled").css("display","inline-block");
+        $("#correctFilename").css("display","none");  
+      }
+    }
+    /*
     $("#uploadIcon").on("click", function() {
       var choices = [];
       for (var k=0;k<6;k++) { choices.push($($("form")[0][k]).is(":checked")); } //save checkbox values
@@ -165,6 +199,7 @@
       $("#viewUrlContainer").css("display","none");
       $("#selectFileButton").click();
     });
+    
     $('input[type="file"]').change(function() {
       //$("#uploadFileContainer").css("display","block");
       filename = $("#selectFileButton")[0].files[0].name;
@@ -185,5 +220,7 @@
     $("#downloadEnabled").on("click",function() {
       $("#uploadFileButton").click();
     });
+    
+    */
     
   });
